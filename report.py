@@ -1,21 +1,24 @@
-from telegram import Update, ReplyKeyboardRemove
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+import os
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-TOKEN = "7564698406:AAFm_EnJ89arMkbjgJ6xGt5SMJGlXO4Z7iU"
+# گرفتن توکن از متغیر محیطی
+TOKEN = os.getenv("TOKEN")
 
-# پیام شروع
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+if not TOKEN:
+    raise ValueError("❌ متغیر محیطی 'TOKEN' تنظیم نشده. لطفاً آن را در Render تعریف کن.")
+
+# دستور /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "سلام! 👋 من بهت کمک می‌کنم یک کانال غیرقانونی رو به تلگرام و پلیس فتا گزارش بدی.\n\n"
-        "لطفاً لینک یا آی‌دی کانال مورد نظر رو بفرست 👇"
+        "سلام! لینک یا آی‌دی کانال مورد نظر رو بفرست تا متن گزارش آماده کنم."
     )
 
-# پیام کاربر = لینک کانال → تولید متن ریپورت
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+# دریافت پیام‌های متنی
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_input = update.message.text.strip()
-    
+
     if user_input.startswith("http") or user_input.startswith("@"):
-        # تولید پیام ایمیل و ریپورت
         report_text = (
             f"🔗 لینک یا آی‌دی گزارش‌شده: {user_input}\n\n"
             "**📝 متن پیشنهادی برای گزارش در تلگرام:**\n"
@@ -28,19 +31,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "Please take appropriate action.\n\n"
             "Thank you."
         )
-
         await update.message.reply_text(report_text)
     else:
-        await update.message.reply_text("لطفاً یک لینک یا آی‌دی معتبر وارد کن (مثلاً t.me/xxxx یا @xxxx)")
+        await update.message.reply_text("لطفاً لینک یا آی‌دی معتبر وارد کن (مثلاً t.me/xxx یا @xxx)")
 
-# اجرای برنامه
+# اجرای اصلی برنامه
 def main():
     app = Application.builder().token(TOKEN).build()
-
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("ربات در حال اجراست...")
+    print("✅ ربات در حال اجراست...")
     app.run_polling()
 
 if __name__ == "__main__":
